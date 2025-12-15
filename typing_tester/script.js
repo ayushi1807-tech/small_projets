@@ -1,68 +1,69 @@
-const typingText = document.querySelector(".typing-text"),
-      paragraph = document.querySelector(".typing-text p"),
+const typingText = document.querySelector(".typing-text p"),
+      inputField = document.querySelector(".wrapper .input-field"),
       mistakeTag = document.querySelector(".mistake span"),
       timeTag = document.querySelector(".time span b"),
       wpmTag = document.querySelector(".wpm span"),
       cpmTag = document.querySelector(".cpm span"),
-      tryAgainBtn = document.querySelector(".try-again");
+      tryAgainBtn = document.querySelector("button");
 
-let timer, maxTime = 60, timeLeft = maxTime;
-let charIndex = 0, mistakes = 0, isTyping = false;
-
-// Sample paragraphs
-
+let timer,
+    maxTime = 60,
+    timeLeft = maxTime,
+    charIndex = 0,
+    mistakes = 0,
+    isTyping = false;
 
 // Function to load a random paragraph
 function randomParagraph() {
     let randIndex = Math.floor(Math.random() * paragraphs.length);
-    paragraph.innerHTML = ""; // Clear existing content
+    typingText.innerHTML = "";
     paragraphs[randIndex].split("").forEach(char => {
         let spanTag = `<span>${char}</span>`;
-        paragraph.innerHTML += spanTag;
+        typingText.innerHTML += spanTag;
     });
-
-    charIndex = 0;
-    mistakes = 0;
+    
+    inputField.value = "";
+    charIndex = mistakes = 0;
     timeLeft = maxTime;
     isTyping = false;
-
+    
     mistakeTag.innerText = mistakes;
     timeTag.innerText = timeLeft;
     wpmTag.innerText = 0;
     cpmTag.innerText = 0;
-
     clearInterval(timer);
-
-    // Auto-focus to start typing immediately
-    typingText.focus();
+    
+    document.addEventListener("keydown", () => inputField.focus());
+    typingText.addEventListener("click", () => inputField.focus());
 }
 
 // Function to handle typing input
-function initTyping(e) {
-    const characters = paragraph.querySelectorAll("span");
-    let typedChar = e.key;
+function initTyping() {
+    const characters = typingText.querySelectorAll("span");
+    let typedChar = inputField.value.charAt(charIndex);
+    
+    if (!isTyping) {
+        timer = setInterval(initTimer, 1000);
+        isTyping = true;
+    }
 
-    if (typedChar.length === 1 && !e.ctrlKey && !e.metaKey) { // Ensure valid input
-        if (!isTyping) {
-            timer = setInterval(initTimer, 1000);
-            isTyping = true;
-        }
-
-        if (charIndex < characters.length) {
-            if (typedChar === characters[charIndex].innerText) {
-                characters[charIndex].classList.add("correct");
-            } else {
-                characters[charIndex].classList.add("incorrect");
-                mistakes++;
+    if (typedChar == "") {
+        if (charIndex > 0) {
+            charIndex--;
+            if (characters[charIndex].classList.contains("incorrect")) {
+                characters[charIndex].classList.remove("incorrect");
+                mistakes--;
             }
-            charIndex++;
+            characters[charIndex].classList.remove("correct");
         }
-    } else if (e.key === "Backspace" && charIndex > 0) {
-        charIndex--;
-        if (characters[charIndex].classList.contains("incorrect")) {
-            mistakes--;
+    } else {
+        if (characters[charIndex].innerText === typedChar) {
+            characters[charIndex].classList.add("correct");
+        } else {
+            mistakes++;
+            characters[charIndex].classList.add("incorrect");
         }
-        characters[charIndex].classList.remove("correct", "incorrect");
+        charIndex++;
     }
 
     characters.forEach(span => span.classList.remove("active"));
@@ -74,17 +75,7 @@ function initTyping(e) {
     updateWPM();
 }
 
-// Function to update WPM & CPM
-function updateWPM() {
-    let correctChars = charIndex - mistakes;
-    let wpm = Math.round((correctChars / 5) / ((maxTime - timeLeft) / 60));
-    let cpm = correctChars;
-    
-    wpmTag.innerText = wpm > 0 ? wpm : 0;
-    cpmTag.innerText = cpm > 0 ? cpm : 0;
-}
-
-// Function to handle timer
+// Timer function
 function initTimer() {
     if (timeLeft > 0) {
         timeLeft--;
@@ -92,17 +83,24 @@ function initTimer() {
         updateWPM();
     } else {
         clearInterval(timer);
+        inputField.disabled = true;
     }
 }
 
-// Try Again button resets everything
+// Function to calculate WPM & CPM
+function updateWPM() {
+    let wpm = Math.round(((charIndex - mistakes) / 5) / ((maxTime - timeLeft) / 60));
+    wpmTag.innerText = wpm < 0 || !wpm ? 0 : wpm;
+    cpmTag.innerText = charIndex - mistakes;
+}
+
+// Try Again button functionality
 tryAgainBtn.addEventListener("click", () => {
     randomParagraph();
+    inputField.disabled = false;
+    inputField.focus();
 });
 
 // Load a new paragraph on page load
 randomParagraph();
-
-// Ensure typing starts when page loads
-typingText.addEventListener("click", () => typingText.focus());
-document.addEventListener("keydown", initTyping);
+inputField.addEventListener("input", initTyping);

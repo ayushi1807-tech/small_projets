@@ -12,16 +12,7 @@
     min-height: 100vh;
     background-color: rgb(45, 127, 127);
   }
- 
-  h1{
-    
-    padding-bottom: 15px;
-    text-align: center;
-  }
-  h5{
-    margin-bottom: 10px;
-    text-align: center;
-  }
+  
   .wrapper {
     width: 600px; /* Reduced width */
     padding: 25px;
@@ -30,7 +21,7 @@
   }
   
   .wrapper .content-box {
-    padding: 17px 18px 0;
+    padding: 12px 18px 0;
     border: 1px solid #ccc;
     border-radius: 10px;
   }
